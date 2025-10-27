@@ -1,0 +1,25 @@
+[data]
+dataset_name = "example_data"              # name of dataset, gets own directory
+target_name = "target"                     # column name of the target variable
+
+[eval]
+random_state = 123
+test_size = 0.20
+cv_splits = 5
+# Choose ONE scorer you intend to use:
+scoring = "neg_root_mean_squared_error"   # regression example
+# scoring = "roc_auc"                     # classification example
+n_jobs = -1
+
+[search]
+model_keys = ["<modelname>"]
+
+[train]                         # optional explicit spec; if unset, train reuses registry "best"
+## example for support vector machine
+# model_key = "svm_rbf"         
+# [train.params]
+# model__C = 3.0
+# model__gamma = "scale"
+
+[predict]
+model_id = "best"               # "best" or a concrete model id from the registry
