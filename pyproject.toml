@@ -1,28 +1,46 @@
 [project]
-name = "example name"
+name = "package"
 version = "0.1.0"
-description = "example description"
+description = ""
 requires-python = ">=3.12"
 dependencies = [
   "polars>=1.6",
-  "pandas>=2.2",
   "numpy>=1.26",
   "scikit-learn>=1.5",
-  "plotly>=5.22",
-  "kaleido>=0.2.1"
+  "pyarrow>=21.0.0",
+  "lightgbm>=4.6.0",
+  "matplotlib>=3.10.7",
+  "seaborn>=0.13.2",
+  "skops>=0.13.0",
+  "typer>=0.20.0",
 ]
 
-[tool.uv]
-dev-dependencies = ["ruff>=0.6","basedpyright>=1.16","ipykernel>=6.29"]
+[project.scripts]
+package = "package.cli:app"
+
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[dependency-groups]
+dev = [
+  "ruff>=0.6",
+  "basedpyright>=1.16",
+  "ipykernel>=6.29",
+  "pytest>=8.0",
+]
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-lint.select = ["E","F","I","UP","B"]
-lint.ignore = ["E203","E501"]
 
 [tool.basedpyright]
-typeCheckingMode = "standard"
-
-[tool.pyright]
+include = ["src"]
 pythonVersion = "3.12"
+typeCheckingMode = "standard"
+reportMissingImports = "none"
+reportMissingTypeStubs = "none"
+exclude = ["**/.venv", "**/.uv", "**/__pycache__", "build", "dist", "**/*.ipynb", "**/*.ipy"]
