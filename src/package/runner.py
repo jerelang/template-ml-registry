@@ -75,13 +75,6 @@ def predict(
     make_plots: bool = False,
     plots_out: Path | None = None,
 ) -> tuple[pl.DataFrame, dict, dict | None]:
-    """
-    Agnostic predict:
-    - uses estimator.predict(X) for both regression and classification
-    - no thresholding or probability assumptions
-    - metrics delegated to eval.evaluate(y_true, y_pred)
-    - plots call is a no-op placeholder (safe to leave enabled)
-    """
     data_path = cfg.path("pre", "test")
 
     rec, est = load_estimator(cfg, model_id=model_id)

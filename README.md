@@ -1,6 +1,6 @@
-# ml-classification-template
+# template-ml-registry
 
-Minimal ML template with a simple data pipeline and model registry for classification poblems.
+Minimal ML template with a simple data pipeline and model registry.
 
 ## Install
 
@@ -33,14 +33,14 @@ Edit `configs/default.toml`:
 
 ```toml
 [data]
-dataset_name = "example_data"
+dataset_name = "example_data"              # name of dataset, gets own directory
 target_name = "target"                     # column name of the target variable
 
 [eval]
 random_state = 123
 test_size = 0.20
 cv_splits = 5
-# Choose ONE scorer you intend to use:
+# Choose ONE scorer you intend to use, by default the MAX is chosen
 scoring = "neg_root_mean_squared_error"   # regression example
 # scoring = "roc_auc"                     # classification example
 n_jobs = -1
@@ -56,7 +56,7 @@ model_keys = ["<modelname>"]
 # model__gamma = "scale"
 
 [predict]
-model_id = "best"     # "best" or a concrete model id from the registry
+model_id = "best"               # "best" or a concrete model id from the registry
 ```
 
 Grid search uses the single metric specified in `[eval].scoring`. The registry records `cv_score_type` (scorer name) and `cv_score` (numeric value).
@@ -68,7 +68,7 @@ Grid search uses the single metric specified in `[eval].scoring`. The registry r
 3. Include desired model keys in `[search].model_keys`
 4. Set the scoring method for cv in `configs/*.toml`
 5. Define the metrics used to evaluate predictions in `src/package/eval/metrics.py`
-6. Define the plots used to evaluate predictions in `src/package/eval/plots.py`
+6. Define the plots used to visualize predictions in `src/package/eval/plots.py`
 
 ## Example Workflow
 
@@ -99,13 +99,13 @@ All commands accept `--config` or `-c` to specify a config file (default: `confi
 | Command | Description |
 |---------|-------------|
 | `uv run package register-data --in <file>` | Read CSV/Parquet and write to `raw/full.parquet` |
-| `uv run package preprocess` | Copy `raw/full.parquet` → `preprocessed/full.parquet` |
-| `uv run package split --stage {raw\|pre}` | Stratified split of `<stage>/full.parquet` into train/test |
+| `uv run package preprocess` | Preprocess and copy `raw/full.parquet` → `preprocessed/full.parquet` |
+| `uv run package split --stage {raw\|pre}` | Split of `<stage>/full.parquet` into train/test |
 | `uv run package search` | GridSearchCV on `preprocessed/train`; registers best estimators trained on full training data|
-| `uv run package train` | Fit the best or specified model on `preprocessed/train`; registers artifact |
+| `uv run package train` | Fit the best or specified model on `preprocessed/train`; registers model artifact as `.skops` |
 | `uv run package predict [--model-id <id>] [--plots] [--plots-out <dir>]` | Predict on `preprocessed/test`; saves metrics and plots |
 | `uv run package models [--top K]` | Show registry: id, model, cv_score_type, cv_score, created_at, params |
 
 ## Model Selection
 
-The registry stores each model with its evaluation scorer. When using `--model-id best`, the best model among entries matching the current `[eval].scoring` is selected. If no model exists for that scorer, run `package search` with that scorer first.
+The registry stores each model with its evaluation scorer. When using `--model-id best`, the best model among entries matching the current `[eval].scoring` in the provided config file is selected. If no model exists for that scorer, run `package search` (or `package train --model-id`) with that scorer first.

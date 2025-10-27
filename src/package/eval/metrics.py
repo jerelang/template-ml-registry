@@ -12,7 +12,7 @@ def _is_numeric(arr: np.ndarray) -> bool:
 
 def evaluate(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
     """
-    Placeholder, task-agnostic evaluation:
+    Placeholder evaluation:
     - numeric targets -> RMSE + MAE
     - non-numeric targets -> exact-match accuracy
     """
