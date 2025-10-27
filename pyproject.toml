@@ -19,11 +19,15 @@ dependencies = [
 package = "package.cli:app"
 
 [build-system]
-requires = ["setuptools>=70"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/dora_rl"]
+include = ["src/dora_rl/py.typed"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/dora_rl/py.typed"]
 
 [dependency-groups]
 dev = [
