@@ -10,7 +10,7 @@ from .config import Config
 
 
 def build_models(cfg: Config) -> Dict[str, Pipeline]:
-    """
+    """Build and return all candidate Pipelines keyed by model name (filtered by config).
     Placeholder. Define all your models here as Pipelines.
     """
     models: Dict[str, Pipeline] = {}

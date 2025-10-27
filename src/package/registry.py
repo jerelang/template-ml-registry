@@ -13,11 +13,13 @@ from .config import Config
 
 
 def _new_id(prefix: str) -> str:
+    """Return a time-ordered unique id for a registry record."""
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     return f"{ts}_{prefix}_{secrets.token_hex(4)}"
 
 
 def _score_value(rec: dict) -> float:
+    """Parse a record's cv_score as float; returns -inf if missing/invalid."""
     v = rec.get("cv_score", None)
     try:
         return float(v)
@@ -48,6 +50,7 @@ def register(
     data_digest: str,
     meta: dict | None = None,
 ) -> dict:
+    """Persist estimator (skops), append record to index, update current best, and return the record."""
     cfg.out_models.mkdir(parents=True, exist_ok=True)
 
     index: list[dict] = []
@@ -80,8 +83,7 @@ def register(
 
 def load_estimator(cfg: Config, model_id: str = "best"):
     """
-    When model_id == 'best', choose the best model **for the current scorer**
-    in cfg.scoring.
+    Load an estimator by id; with 'best', select by current scorer and highest score/recency.
     """
     if not cfg.index_path.exists():
         raise FileNotFoundError("No index.json found. Run `package search` first.")
@@ -113,6 +115,7 @@ def load_estimator(cfg: Config, model_id: str = "best"):
 
 
 def models_table(cfg: Config, top: int | None = None) -> pl.DataFrame:
+    """Return the registry as a Polars table sorted by score then recency (optional top-K)."""
     if not cfg.index_path.exists():
         return pl.DataFrame({"id": [], "model": [], "cv_score": [], "created_at": [], "params": []})
 

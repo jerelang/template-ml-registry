@@ -20,6 +20,7 @@ def cache_as_parquet(df: pl.DataFrame, out: str | Path) -> Path:
 def load_table(
     path: str | Path, columns: list[str] | None = None, limit: int | None = None
 ) -> pl.DataFrame:
+    """Scan (lazy) CSV/Parquet and collect (streaming when possible). Optional column/row pruning."""
     p = Path(path)
     lf = pl.scan_parquet(p) if p.suffix.lower() in {".parquet", ".pq"} else pl.scan_csv(p)
 
@@ -38,11 +39,13 @@ def load_table(
 
 
 def ingest(src_path: str | Path, dst_raw_full: str | Path) -> Path:
+    """Load a source table and write RAW/full.parquet."""
     df = load_table(src_path)
     return cache_as_parquet(df, dst_raw_full)
 
 
 def file_sha256(path: str | Path, chunk_size: int = 2**20) -> str:
+    """Compute SHA-256 of a file in chunks."""
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(chunk_size), b""):
@@ -53,6 +56,7 @@ def file_sha256(path: str | Path, chunk_size: int = 2**20) -> str:
 def load_Xy(
     path: str | Path, target_col: str = "target"
 ) -> tuple[np.ndarray, np.ndarray, list[str]]:
+    """Load table and return (X, y, feature_names), using all non-target columns as features."""
     df = load_table(path)
     if target_col not in df.columns:
         raise ValueError(f"Missing target column '{target_col}' in {path}")
@@ -94,6 +98,7 @@ def _write_split(
 
 
 def write_split_for_stage(cfg: Config, stage: str = "pre", target_col: str = "target") -> dict:
+    """Split FULL into TRAIN/TEST for a given stage ('raw' or 'pre')."""
     stage = stage.lower()
     if stage not in {"raw", "pre", "preprocessed"}:
         raise ValueError("stage must be one of: 'raw', 'pre', 'preprocessed'")

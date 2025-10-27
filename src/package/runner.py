@@ -15,6 +15,7 @@ from .registry import load_estimator, register
 
 
 def search(cfg: Config) -> pl.DataFrame:
+    """Grid search on PRE/train, register each best estimator, and write cv_summary.json."""
     data_path = cfg.path("pre", "train")
     X_tr, y_tr, feats = data_io.load_Xy(data_path, target_col=cfg.target_name)
     models = build_models(cfg)
@@ -40,6 +41,7 @@ def search(cfg: Config) -> pl.DataFrame:
 
 
 def train(cfg: Config, spec: dict | None = None) -> pl.DataFrame:
+    """Full training for a given spec (or current best); registers and returns id/model."""
     data_path = cfg.path("pre", "train")
     X_tr, y_tr, feats = data_io.load_Xy(data_path, target_col=cfg.target_name)
 
@@ -75,6 +77,7 @@ def predict(
     make_plots: bool = False,
     plots_out: Path | None = None,
 ) -> tuple[pl.DataFrame, dict, dict | None]:
+    """Predict on PRE/test with the chosen model, compute task-agnostic metrics, save outputs."""
     data_path = cfg.path("pre", "test")
 
     rec, est = load_estimator(cfg, model_id=model_id)

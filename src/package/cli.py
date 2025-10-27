@@ -22,6 +22,7 @@ def register_data(
     config: Path = typer.Option(Path("configs/default.toml"), "--config", "-c"),
     src: Path = typer.Option(..., "--in", help="Source CSV/Parquet file"),
 ):
+    """Ingest a CSV/Parquet file into RAW/full.parquet under the dataset root."""
     cfg, _ = load_config(config)
     if not src.exists():
         raise typer.BadParameter(f"Source file does not exist: {src}")
@@ -36,6 +37,7 @@ def register_data(
 def preprocess(
     config: Path = typer.Option(Path("configs/default.toml"), "--config", "-c"),
 ):
+    """Preprocess and copy data/raw/full.parquet to data/preprocessed/full.parquet."""
     cfg, _ = load_config(config)
     meta = preprocess_copy(cfg)
     typer.echo(meta)
@@ -46,6 +48,7 @@ def split(
     config: Path = typer.Option(Path("configs/default.toml"), "--config", "-c"),
     stage: str = typer.Option("pre", "--stage", "-s"),
 ):
+    """Materialize a random train/test split for the selected stage, random_state and split ratio (configured in config/.toml)."""
     cfg, _ = load_config(config)
     meta = write_split_for_stage(cfg, stage=stage)
     typer.echo(meta)
@@ -55,6 +58,7 @@ def split(
 def search(
     config: Path = typer.Option(Path("configs/default.toml"), "--config", "-c"),
 ):
+    """Run grid search over configured models and register each best estimator."""
     cfg, _ = load_config(config)
     cv_df = cmd_search(cfg)
     with pl.Config(tbl_rows=-1):
@@ -65,6 +69,7 @@ def search(
 def train(
     config: Path = typer.Option(Path("configs/default.toml"), "--config", "-c"),
 ):
+    """Fit a specific model spec (or the current best), then register the fitted artifact."""
     cfg, raw = load_config(config)
     tr = raw.get("train", {}) or {}
     spec = (
@@ -84,6 +89,7 @@ def predict(
     plots: bool = typer.Option(False, "--plots/--no-plots"),
     plots_out: Optional[Path] = typer.Option(None, "--plots-out"),
 ):
+    """Run predictions on PRE/test, save predictions/metrics, and optionally plots."""
     cfg, raw = load_config(config)
     mid = model_id or (raw.get("predict", {}) or {}).get("model_id", "best")
     preds, metrics, plot_paths = cmd_predict(
@@ -107,6 +113,7 @@ def models(
     config: Path = typer.Option(Path("configs/default.toml"), "--config", "-c"),
     top: Optional[int] = typer.Option(None, "--top"),
 ):
+    """Show the registry table (optionally top-K by score/recency)."""
     cfg, _ = load_config(config)
     df_models = models_table(cfg, top)
     typer.echo(df_models)

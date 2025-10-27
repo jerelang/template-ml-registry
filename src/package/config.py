@@ -8,6 +8,8 @@ from typing import Literal
 
 @dataclass(frozen=True)
 class Config:
+    """Runtime configuration and I/O layout for data, models, and CV settings."""
+
     random_state: int = 123
     test_size: float = 0.20
     cv_splits: int = 5
@@ -27,20 +29,24 @@ class Config:
         return Path("data") / self.dataset_name
 
     def stage_dir(self, stage: Literal["raw", "pre"]) -> Path:
+        """Return (and create) the directory for a stage ('raw' or 'preprocessed')."""
         name = "preprocessed" if stage == "pre" else "raw"
         d = self.dataset_root / name
         d.mkdir(parents=True, exist_ok=True)
         return d
 
     def path(self, stage: Literal["raw", "pre"], split: Literal["full", "train", "test"]) -> Path:
+        """Return the default path for a stage/split Parquet file."""
         return self.stage_dir(stage) / f"{split}.parquet"
 
     @property
     def index_path(self) -> Path:
+        """Path to the model registry index (JSON)."""
         return self.out_models / "index.json"
 
     @property
     def current_best_path(self) -> Path:
+        """Path to the file storing the current best model id."""
         return self.out_models / "current_best.json"
 
 
@@ -48,6 +54,7 @@ DEFAULT_CONFIG = Config()
 
 
 def load_config(path: Path) -> tuple[Config, dict]:
+    """Load TOML config and return a populated Config plus the raw dict."""
     with path.open("rb") as f:
         raw = tomllib.load(f)
 

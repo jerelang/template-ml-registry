@@ -20,6 +20,7 @@ def run_grid_search(
     y_train,
     models: Dict[str, Pipeline],
 ) -> tuple[Dict[str, GridSearchCV], pl.DataFrame]:
+    """Run GridSearchCV per model, refit best on full training data, and return (fits, CV summary table)."""
     cv = KFold(n_splits=cfg.cv_splits, shuffle=True, random_state=cfg.random_state)
 
     results: Dict[str, GridSearchCV] = {}
