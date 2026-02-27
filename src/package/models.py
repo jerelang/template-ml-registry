@@ -10,20 +10,21 @@ from .config import Config
 
 
 def build_models(cfg: Config) -> Dict[str, Pipeline]:
-    """Build and return all candidate Pipelines keyed by model name (filtered by config).
-    Placeholder. Define all your models here as Pipelines.
-    """
+    """Build and return all candidate Pipelines keyed by model name (filtered by config)."""
     models: Dict[str, Pipeline] = {}
 
+    # Smoke tests dummy model
+    models["dummy_regressor"] = Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            ("model", DummyRegressor(strategy="mean")),
+        ]
+    )
     models["<modelname>"] = Pipeline(
         [
             ("scaler", StandardScaler()),
-            (
-                "model",
-                DummyRegressor(  # Dummy Estimator
-                    strategy="mean",
-                ),
-            ),
+            ("model", DummyRegressor(strategy="mean")),
         ]
     )
+
     return {k: v for k, v in models.items() if k in cfg.model_keys}

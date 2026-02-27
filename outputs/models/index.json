@@ -1,0 +1,46 @@
+[
+  {
+    "id": "20260227T095044Z_<modelname>_05c896b1",
+    "model_key": "<modelname>",
+    "artifact_path": "outputs/models/20260227T095044Z_<modelname>_05c896b1.skops",
+    "created_at": "2026-02-27T09:50:44.967221+00:00",
+    "params": {},
+    "cv_score_type": "neg_root_mean_squared_error",
+    "optimize_type": "max",
+    "cv_score": -0.7468780975181172,
+    "data_digest": "e4fd9f32d726250c34504a11b8cfefab0e8c4ec7e89281e88c0070b2536aebfc",
+    "cfg": {
+      "random_state": 123,
+      "test_size": 0.2,
+      "cv_splits": 5,
+      "scoring": "neg_root_mean_squared_error",
+      "optimize_type": "max",
+      "n_jobs": -1,
+      "dataset_name": "example_data",
+      "target_name": "target",
+      "out_search": "outputs/gridsearch",
+      "out_models": "outputs/models",
+      "model_keys": [
+        "<modelname>"
+      ]
+    },
+    "meta": {
+      "feature_names": [
+        "alcohol",
+        "malic_acid",
+        "ash",
+        "alcalinity_of_ash",
+        "magnesium",
+        "total_phenols",
+        "flavanoids",
+        "nonflavanoid_phenols",
+        "proanthocyanins",
+        "color_intensity",
+        "hue",
+        "od280/od315_of_diluted_wines",
+        "proline"
+      ],
+      "grid_space": {}
+    }
+  }
+]

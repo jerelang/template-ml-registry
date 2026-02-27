@@ -113,7 +113,7 @@ def predict(
 
         plots_dir = Path(plots_out) if plots_out else (out_dir / "plots")
         title_prefix = f"model={mid_for_dir}, data={Path(str(data_path)).name}"
-        # The placeholder accepts arbitrary args/kwargs and returns {}
+        # The placeholder accepts any args/kwargs and returns {}
         plot_paths = prediction_plots(
             y_true=y_true, y_pred=y_pred, out_dir=plots_dir, title_prefix=title_prefix
         )

@@ -23,11 +23,11 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dora_rl"]
-include = ["src/dora_rl/py.typed"]
+packages = ["src/package"]
+include = ["src/package/py.typed"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/dora_rl/py.typed"]
+include = ["src/package/py.typed"]
 
 [dependency-groups]
 dev = [

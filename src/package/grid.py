@@ -10,6 +10,7 @@ from .config import Config
 
 """ Placeholder. Fill per model key with dictionaries like this {parameter name: [value range]}."""
 GRID_SPACES: dict[str, dict] = {
+    "dummy_regressor": {},  # smoke test dummy estimator, no parameters
     "<modelname>": {},
 }
 
