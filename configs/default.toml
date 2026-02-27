@@ -8,6 +8,7 @@ test_size = 0.20
 cv_splits = 5
 # Choose ONE scorer you intend to use, by default the MAX is chosen
 scoring = "neg_root_mean_squared_error"   # regression example
+optimize_type = "max"  # max or min scoring
 # scoring = "roc_auc"                     # classification example
 n_jobs = -1
 

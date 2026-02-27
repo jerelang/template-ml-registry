@@ -14,8 +14,8 @@ class Config:
     test_size: float = 0.20
     cv_splits: int = 5
     scoring: str = "neg_root_mean_squared_error"  # generic default
+    optimize_type: Literal["max", "min"] = "max"  # max or min scoring
     n_jobs: int = -1
-
     dataset_name: str = "example_data"
     target_name: str = "target"
 
@@ -44,11 +44,6 @@ class Config:
         """Path to the model registry index (JSON)."""
         return self.out_models / "index.json"
 
-    @property
-    def current_best_path(self) -> Path:
-        """Path to the file storing the current best model id."""
-        return self.out_models / "current_best.json"
-
 
 DEFAULT_CONFIG = Config()
 
@@ -68,6 +63,7 @@ def load_config(path: Path) -> tuple[Config, dict]:
         test_size=float(eval_.get("test_size", DEFAULT_CONFIG.test_size)),
         cv_splits=int(eval_.get("cv_splits", DEFAULT_CONFIG.cv_splits)),
         scoring=str(eval_.get("scoring", DEFAULT_CONFIG.scoring)),
+        optimize_type=str(eval_.get("optimize_type", DEFAULT_CONFIG.optimize_type)),
         n_jobs=int(eval_.get("n_jobs", DEFAULT_CONFIG.n_jobs)),
         dataset_name=str(data_.get("dataset_name", DEFAULT_CONFIG.dataset_name)),
         target_name=str(data_.get("target_name", DEFAULT_CONFIG.target_name)),

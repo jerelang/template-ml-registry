@@ -10,15 +10,23 @@ from sklearn.model_selection import train_test_split
 from ..config import Config
 
 
-def cache_as_parquet(df: pl.DataFrame, out: str | Path) -> Path:
+def cache_as_parquet(df: pl.DataFrame | pl.LazyFrame, out: str | Path) -> Path:
     outp = Path(out)
     outp.parent.mkdir(parents=True, exist_ok=True)
-    df.write_parquet(outp)
+
+    if isinstance(df, pl.LazyFrame):
+        try:
+            df.sink_parquet(outp)
+        except Exception:
+            df.collect(engine="streaming").write_parquet(outp)
+    else:
+        df.write_parquet(outp)
+
     return outp
 
 
 def load_table(
-    path: str | Path, columns: list[str] | None = None, limit: int | None = None
+    path: str | Path, columns: list[str] | None = None, limit: int | None = None, lazy: bool = False
 ) -> pl.DataFrame:
     """Scan (lazy) CSV/Parquet and collect (streaming when possible). Optional column/row pruning."""
     p = Path(path)
@@ -31,16 +39,18 @@ def load_table(
 
     if limit is not None:
         lf = lf.limit(limit)
-
-    try:
-        return lf.collect(engine="streaming")
-    except Exception:
-        return lf.collect()
+    if lazy:
+        return lf
+    else:
+        try:
+            return lf.collect(engine="streaming")
+        except Exception:
+            return lf.collect()
 
 
 def ingest(src_path: str | Path, dst_raw_full: str | Path) -> Path:
     """Load a source table and write RAW/full.parquet."""
-    df = load_table(src_path)
+    df = load_table(src_path, lazy=True)
     return cache_as_parquet(df, dst_raw_full)
 
 

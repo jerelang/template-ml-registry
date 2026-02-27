@@ -28,7 +28,7 @@ def _score_value(rec: dict) -> float:
 
 
 def _jsonify(obj):
-    """Recursively convert dataclasses, Paths, tuples/sets to JSON-safe types."""
+    """Convert dataclasses, Paths, tuples/sets to JSON-safe types."""
     if is_dataclass(obj):
         obj = asdict(obj)
     if isinstance(obj, dict):
@@ -68,6 +68,7 @@ def register(
         "created_at": datetime.now(timezone.utc).isoformat(),
         "params": params,
         "cv_score_type": cfg.scoring,
+        "optimize_type": cfg.optimize_type,
         "cv_score": cv_score,
         "data_digest": data_digest,
         "cfg": _jsonify(cfg),
@@ -75,9 +76,6 @@ def register(
     }
     index.append(rec)
     cfg.index_path.write_text(json.dumps(index, indent=2))
-
-    best = max(index, key=lambda r: (_score_value(r), r["created_at"]))
-    cfg.current_best_path.write_text(json.dumps({"id": best["id"]}, indent=2))
     return rec
 
 
@@ -99,7 +97,7 @@ def load_estimator(cfg: Config, model_id: str = "best"):
 
     # score method aware
     scorer = cfg.scoring
-
+    optimize_type = cfg.optimize_type
     candidates = [
         r for r in index if r.get("cv_score_type") == scorer and r.get("cv_score") is not None
     ]
@@ -108,8 +106,10 @@ def load_estimator(cfg: Config, model_id: str = "best"):
             f"No models in the registry were trained/evaluated with scoring='{scorer}'.\n"
             f"Set [eval].scoring = '{scorer}' in your TOML and run `package search` to register models for that scorer."
         )
-
-    best = max(candidates, key=lambda r: (_score_value(r), r["created_at"]))
+    if optimize_type == "max":
+        best = max(candidates, key=lambda r: (_score_value(r), r["created_at"]))
+    else:
+        best = min(candidates, key=lambda r: (_score_value(r), r["created_at"]))
     est = sio.load(Path(best["artifact_path"]))
     return best, est
 
