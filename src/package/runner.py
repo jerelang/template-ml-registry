@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -14,10 +15,23 @@ from .models import build_models
 from .registry import load_estimator, register
 
 
+def data_warner(path: Path, split: str = "") -> None:
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Missing {split} data: {path}\nRun: `gnn_acopf preprocess` then `gnn_acopf split --stage pre`."
+        )
+    return
+
+
 def search(cfg: Config) -> pl.DataFrame:
     """Grid search on PRE/train, register each best estimator, and write cv_summary.json."""
     data_path = cfg.path("pre", "train")
+    data_warner(data_path, split="train")
     X_tr, y_tr, feats = data_io.load_Xy(data_path, target_col=cfg.target_name)
+    if X_tr.shape[0] < cfg.cv_splits:
+        raise ValueError(
+            f"Not enough samples for KFold: n_samples={X_tr.shape[0]} < cv_splits={cfg.cv_splits}."
+        )
     models = build_models(cfg)
     results, cv_summary = run_grid_search(cfg, X_tr, y_tr, models)
 
@@ -44,6 +58,7 @@ def train(cfg: Config, spec: dict | None = None) -> pl.DataFrame:
     """Full training for a given spec (or current best); registers and returns id/model."""
     data_path = cfg.path("pre", "train")
     X_tr, y_tr, feats = data_io.load_Xy(data_path, target_col=cfg.target_name)
+    data_warner(data_path, split="train")
 
     if spec is None:
         rec, _ = load_estimator(cfg, model_id="best")
@@ -51,7 +66,8 @@ def train(cfg: Config, spec: dict | None = None) -> pl.DataFrame:
     else:
         model_key, params = spec["model_key"], spec["params"]
 
-    model = build_models(cfg)[model_key]
+    cfg_for_model = replace(cfg, model_keys=(model_key,))
+    model = build_models(cfg_for_model)[model_key]
     model.set_params(**params)
     model.fit(X_tr, y_tr)
     meta = {
@@ -79,6 +95,7 @@ def predict(
 ) -> tuple[pl.DataFrame, dict, dict | None]:
     """Predict on PRE/test with the chosen model, compute task-agnostic metrics, save outputs."""
     data_path = cfg.path("pre", "test")
+    data_warner(data_path, split="test")
 
     rec, est = load_estimator(cfg, model_id=model_id)
     X, y_true, _ = data_io.load_Xy(data_path, target_col=cfg.target_name)

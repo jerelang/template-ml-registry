@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Iterable
 
 import polars as pl
 from sklearn.model_selection import GridSearchCV, KFold
@@ -15,6 +15,14 @@ GRID_SPACES: dict[str, dict] = {
 }
 
 
+def validate_grid_spaces(model_keys: Iterable[str]) -> None:
+    """Every requested model needs a grid-space entry."""
+    keys = list(model_keys)
+    missing = sorted(set(keys) - set(GRID_SPACES))
+    if missing:
+        raise KeyError(f"Missing GRID_SPACES entries for: {missing}.")
+
+
 def run_grid_search(
     cfg: Config,
     X_train,
@@ -22,14 +30,15 @@ def run_grid_search(
     models: Dict[str, Pipeline],
 ) -> tuple[Dict[str, GridSearchCV], pl.DataFrame]:
     """Run GridSearchCV per model, refit best on full training data, and return (fits, CV summary table)."""
+    if not models:
+        raise ValueError("No model names specified for grid search. Check [search].model_keys.")
+    validate_grid_spaces(models.keys())
     cv = KFold(n_splits=cfg.cv_splits, shuffle=True, random_state=cfg.random_state)
 
     results: Dict[str, GridSearchCV] = {}
     rows: list[dict] = []
 
     for name, estimator in models.items():
-        if name not in GRID_SPACES:
-            continue
         gs = GridSearchCV(
             estimator=estimator,
             param_grid=GRID_SPACES[name],
@@ -50,8 +59,9 @@ def run_grid_search(
             }
         )
 
+    descending = cfg.optimize_type == "max"
     cv_summary = (
-        pl.DataFrame(rows).sort("best_cv", descending=True)
+        pl.DataFrame(rows).sort("best_cv", descending=descending)
         if rows
         else pl.DataFrame({"model": [], "cv_score_type": [], "best_cv": [], "best_params": []})
     )

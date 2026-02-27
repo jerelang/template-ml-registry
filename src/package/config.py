@@ -48,6 +48,36 @@ class Config:
 DEFAULT_CONFIG = Config()
 
 
+def _validate_config(cfg: Config) -> None:
+    """Validation for configs."""
+    issues: list[str] = []
+
+    if not (0.0 < cfg.test_size < 1.0):
+        issues.append(f"[eval].test_size must be in (0, 1); got {cfg.test_size!r}.")
+    if cfg.cv_splits < 2:
+        issues.append(f"[eval].cv_splits must be >= 2; got {cfg.cv_splits!r}.")
+    if cfg.optimize_type not in ("max", "min"):
+        issues.append(f"[eval].optimize_type must be 'max' or 'min'; got {cfg.optimize_type!r}.")
+    if cfg.n_jobs == 0:
+        issues.append("[eval].n_jobs must not be 0 (use -1 for all cores or a positive int).")
+
+    if not cfg.dataset_name.strip():
+        issues.append("[data].dataset_name must be non-empty.")
+    if not cfg.target_name.strip():
+        issues.append("[data].target_name must be non-empty.")
+
+    if not cfg.model_keys:
+        issues.append("[search].model_keys must contain at least one model key.")
+    else:
+        dupes = sorted({k for k in cfg.model_keys if cfg.model_keys.count(k) > 1})
+        if dupes:
+            issues.append(f"[search].model_keys contains duplicates: {dupes}.")
+
+    if issues:
+        msg = "Invalid config:\n" + "\n".join(f"- {i}" for i in issues)
+        raise ValueError(msg)
+
+
 def load_config(path: Path) -> tuple[Config, dict]:
     """Load TOML config and return a populated Config plus the raw dict."""
     with path.open("rb") as f:
@@ -62,11 +92,12 @@ def load_config(path: Path) -> tuple[Config, dict]:
         random_state=int(eval_.get("random_state", DEFAULT_CONFIG.random_state)),
         test_size=float(eval_.get("test_size", DEFAULT_CONFIG.test_size)),
         cv_splits=int(eval_.get("cv_splits", DEFAULT_CONFIG.cv_splits)),
-        scoring=str(eval_.get("scoring", DEFAULT_CONFIG.scoring)),
-        optimize_type=str(eval_.get("optimize_type", DEFAULT_CONFIG.optimize_type)),
+        scoring=str(eval_.get("scoring", DEFAULT_CONFIG.scoring)).strip(),
+        optimize_type=str(eval_.get("optimize_type", DEFAULT_CONFIG.optimize_type)).lower(),
         n_jobs=int(eval_.get("n_jobs", DEFAULT_CONFIG.n_jobs)),
-        dataset_name=str(data_.get("dataset_name", DEFAULT_CONFIG.dataset_name)),
-        target_name=str(data_.get("target_name", DEFAULT_CONFIG.target_name)),
-        model_keys=tuple(search_.get("model_keys", list(DEFAULT_CONFIG.model_keys))),
+        dataset_name=str(data_.get("dataset_name", DEFAULT_CONFIG.dataset_name)).strip(),
+        target_name=str(data_.get("target_name", DEFAULT_CONFIG.target_name)).strip(),
+        model_keys=search_.get("model_keys", list(DEFAULT_CONFIG.model_keys)),
     )
+    _validate_config(cfg)
     return cfg, raw

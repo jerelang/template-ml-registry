@@ -26,5 +26,6 @@ def build_models(cfg: Config) -> Dict[str, Pipeline]:
             ("model", DummyRegressor(strategy="mean")),
         ]
     )
-
+    if set(cfg.model_keys) - set(models.keys()):
+        raise KeyError("Unknown model_keys in config.")
     return {k: v for k, v in models.items() if k in cfg.model_keys}

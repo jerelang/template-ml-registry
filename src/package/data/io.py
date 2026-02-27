@@ -135,9 +135,7 @@ def _write_split(
     }
 
 
-def write_split_for_stage(
-    cfg: Config, stage: str = "pre", target_col: str = "target"
-) -> dict[str, Any]:
+def write_split_for_stage(cfg: Config, stage: str = "pre") -> dict[str, Any]:
     """Split FULL into TRAIN/TEST for a given stage ('raw' or 'pre')."""
     stage = stage.lower()
     if stage not in {"raw", "pre", "preprocessed"}:
@@ -149,5 +147,5 @@ def write_split_for_stage(
         test_path=cfg.path(st, "test"),
         test_size=cfg.test_size,
         random_state=cfg.random_state,
-        target_col=target_col,
+        target_col=cfg.target_name,
     )
