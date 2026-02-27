@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import secrets
 from dataclasses import asdict, is_dataclass
-from datetime import datetime, fromisoformat, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TypedDict, cast
 
@@ -124,7 +124,7 @@ def load_estimator(cfg: Config, model_id: str = "best"):
         best = max(candidates, key=lambda r: (_score_value(r), r["created_at"]))
     else:
         best = min(
-            candidates, key=lambda r: (_score_value(r), -fromisoformat(r["created_at"]).timestamp())
+            candidates, key=lambda r: (_score_value(r), -datetime.fromisoformat(r["created_at"]).timestamp())
         )
     est = sio.load(Path(best["artifact_path"]))
     return best, est
