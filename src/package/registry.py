@@ -5,6 +5,7 @@ import secrets
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, TypedDict, cast
 
 import polars as pl
 import skops.io as sio
@@ -18,18 +19,17 @@ def _new_id(prefix: str) -> str:
     return f"{ts}_{prefix}_{secrets.token_hex(4)}"
 
 
-def _score_value(rec: dict) -> float:
+def _score_value(rec: RegistryRecord) -> float:
     """Parse a record's cv_score as float; returns -inf if missing/invalid."""
-    v = rec.get("cv_score", None)
-    try:
-        return float(v)
-    except (TypeError, ValueError):
+    v = rec.get("cv_score")
+    if v is None:
         return float("-inf")
+    return float(v)
 
 
-def _jsonify(obj):
+def _jsonify(obj: Any) -> Any:
     """Convert dataclasses, Paths, tuples/sets to JSON-safe types."""
-    if is_dataclass(obj):
+    if is_dataclass(obj) and not isinstance(obj, type):
         obj = asdict(obj)
     if isinstance(obj, dict):
         return {k: _jsonify(v) for k, v in obj.items()}
@@ -38,6 +38,20 @@ def _jsonify(obj):
     if isinstance(obj, Path):
         return str(obj)
     return obj
+
+
+class RegistryRecord(TypedDict):
+    id: str
+    model_key: str
+    artifact_path: str
+    created_at: str
+    params: dict[str, Any]
+    cv_score_type: str
+    optimize_type: str
+    cv_score: float | None
+    data_digest: str
+    cfg: Any
+    meta: dict[str, Any]
 
 
 def register(
@@ -49,30 +63,30 @@ def register(
     cv_score: float | None,
     data_digest: str,
     meta: dict | None = None,
-) -> dict:
+) -> RegistryRecord:
     """Persist estimator (skops), append record to index, update current best, and return the record."""
     cfg.out_models.mkdir(parents=True, exist_ok=True)
 
-    index: list[dict] = []
+    index: list[RegistryRecord] = []
     if cfg.index_path.exists():
-        index = json.loads(cfg.index_path.read_text())
+        index = cast(list[RegistryRecord], json.loads(cfg.index_path.read_text()))
 
     model_id = _new_id(model_key)
     art_path = cfg.out_models / f"{model_id}.skops"
     sio.dump(estimator, art_path)
 
-    rec = {
+    rec: RegistryRecord = {
         "id": model_id,
         "model_key": model_key,
         "artifact_path": str(art_path),
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "params": params,
+        "params": cast(dict[str, Any], _jsonify(params)),
         "cv_score_type": cfg.scoring,
         "optimize_type": cfg.optimize_type,
         "cv_score": cv_score,
         "data_digest": data_digest,
         "cfg": _jsonify(cfg),
-        "meta": meta or {},
+        "meta": cast(dict[str, Any], _jsonify(meta or {})),
     }
     index.append(rec)
     cfg.index_path.write_text(json.dumps(index, indent=2))
@@ -86,7 +100,7 @@ def load_estimator(cfg: Config, model_id: str = "best"):
     if not cfg.index_path.exists():
         raise FileNotFoundError("No index.json found. Run `package search` first.")
 
-    index: list[dict] = json.loads(cfg.index_path.read_text())
+    index = cast(list[RegistryRecord], json.loads(cfg.index_path.read_text()))
 
     if model_id != "best":
         rec = next((r for r in index if r["id"] == model_id), None)
@@ -119,7 +133,7 @@ def models_table(cfg: Config, top: int | None = None) -> pl.DataFrame:
     if not cfg.index_path.exists():
         return pl.DataFrame({"id": [], "model": [], "cv_score": [], "created_at": [], "params": []})
 
-    index: list[dict] = json.loads(cfg.index_path.read_text())
+    index = cast(list[RegistryRecord], json.loads(cfg.index_path.read_text()))
     rows = [
         {
             "id": r["id"],

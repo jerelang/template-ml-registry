@@ -1,6 +1,7 @@
+[![CI](https://github.com/jerelang/template-ml-registry/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jerelang/template-ml-registry/actions/workflows/ci.yml?query=branch%3Amain)
 # template-ml-registry
 
-Minimal ML template with a simple data pipeline and model registry.
+Machine Learning template with a simple data pipeline and model registry.
 
 ## Install
 

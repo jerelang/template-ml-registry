@@ -21,7 +21,7 @@ jobs:
             - name: Sync dependencies
               run: uv sync --group dev --frozen
             - name: Ruff
-              run: uv run ruff check . --fix
+              run: uv run ruff check .
             - name: Type check
               run: uv run basedpyright
             - name: Tests
